@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Clinic Management System</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial;margin:0;background:url('cover_photo.jpg') no-repeat center center fixed;background-size:cover}
+html,body{height:100%}
+#mainPage{min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  background:#2E7D32;
+  color:white;
+}
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.header-left img{height:45px}
+
+/* BUTTONS */
+.btn{
+  padding:10px 18px;
+  border:none;
+  border-radius:25px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btn.primary{background:#43A047;color:white}
+.btn.logout{background:#1B5E20;color:white}
+
+/* LOGIN */
+.login-page{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:linear-gradient(rgba(46,125,50,.6), rgba(46,125,50,.6)), url('cover_photo.jpg') no-repeat center center fixed;
+  background-size:cover;
+}
+.login-box{
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  width:320px;
+  text-align:center;
+}
+.login-logo{height:60px;margin-bottom:10px}
+
+/* TABS */
+.tabs{display:flex;background:#C8E6C9}
+.tab{
+  flex:1;
+  padding:14px;
+  text-align:center;
+  font-weight:bold;
+  cursor:pointer;
+}
+.tab.active{background:#2E7D32;color:white}
+
+/* CONTAINER */
+.container{
+  max-width:820px;
+  margin:25px auto;
+  padding:25px;
+  background:white;
+  border-radius:20px;
+  box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+input, textarea, select{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #81C784;
+}
+textarea{resize:none}
+
+/* SMS */
+.sms-box{
+  border:2px dashed #43A047;
+  padding:12px;
+  border-radius:12px;
+  background:#F1F8E9;
+}
+.hotline-box{
+  border:2px solid #43A047;
+  padding:16px;
+  border-radius:12px;
+  background:#F1F8E9;
+  margin-top:12px;
+}
+
+/* RECORDS */
+.record-card{
+  background:#E8F5E9;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+.search-box{margin-bottom:15px}
+.summary-box{
+  background:#F1F8E9;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:15px;
+  border:1px solid #A5D6A7;
+}
+.summary-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+}
+.summary-table th,.summary-table td{
+  border:1px solid #C8E6C9;
+  padding:6px;
+  text-align:left;
+  font-size:14px;
+}
+
+/* FOOTER */
+footer{text-align:center;padding:12px;background:#2E7D32;color:white;margin-top:auto}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <img src="logo.png" alt="Clinic Logo" class="login-logo">
+    <h2>Clinic Login</h2>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button class="btn primary" id="loginBtn">Login</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainPage" style="display:none;">
+<header>
+  <div class="header-left">
+    <img src="logo.png" alt="Clinic Logo">
+    <h3>Clinic Management System</h3>
+  </div>
+  <button class="btn logout" id="logoutBtn">Logout</button>
+</header>
+
+<div class="tabs">
+  <div class="tab active" id="tabHome">Home</div>
+  <div class="tab" id="tabNotifier">Notifier</div>
+  <div class="tab" id="tabRecords">Records</div>
+</div>
+
+<!-- HOME -->
+<div id="homePage" class="container">
+  <h2>Welcome</h2>
+  <p>Scan a student QR code or manually enter student information.</p>
+  <div class="hotline-box">
+    <h3>Emergency Contacts</h3>
+    <div><b>QCDRRMO:</b> <a href="tel:122">122</a></div>
+    <div><b>EJNHS:</b> <a href="tel:+63-968-232-2955">+63-968-232-2955</a></div>
+    <div><b>SDRRM Coordinator:</b> <a href="tel:+63-906-181-7344">+63-906-181-7344</a></div>
+    <div><b>School Guard:</b> <a href="tel:+63-956-904-9711">+63-956-904-9711</a></div>
+    <div><b>NDRRMC:</b> <a href="tel:+63-917-847-5757">+63-917-847-5757</a></div>
+    <div><b>BRGY. PASONG TAMO:</b> <a href="tel:+63-908-885-4603">+63-908-885-4603</a></div>
+  </div>
+</div>
+
+<!-- NOTIFIER -->
+<div id="notifierPage" class="container" style="display:none;">
+  <h3>Scan QR Code</h3>
+  <div id="reader" style="width:300px;margin:auto"></div>
+
+  <label>Raw QR Data</label>
+  <textarea id="rawData"></textarea>
+
+  <input id="studentName" placeholder="Student Name">
+  <input id="gradeSection" placeholder="Grade & Section">
+  <input id="guardianName" placeholder="Parent / Guardian">
+
+  <!-- REASON DROPDOWN -->
+  <label>Reason for Visit</label>
+  <select id="reasonSelect">
+    <option value="">-- Select Reason --</option>
+    <option>Headache</option>
+    <option>Fever</option>
+    <option>Stomachache</option>
+    <option>Dizziness</option>
+    <option>Toothache</option>
+    <option>Injury / Wound</option>
+    <option>Menstrual Pain</option>
+    <option>Allergy</option>
+    <option>Other</option>
+  </select>
+
+  <!-- SPECIFY -->
+  <input id="reasonOther" placeholder="Please specify reason" style="display:none;">
+
+  <input id="parentPhone" placeholder="Parent Phone">
+
+  <h4>Generated SMS Notification</h4>
+  <div class="sms-box">
+    <textarea id="smsMessage" readonly></textarea>
+  </div>
+  <button class="btn primary" id="copySms">Copy Message</button>
+
+  <button class="btn primary" id="saveRecord">Save Record</button>
+</div>
+
+<!-- RECORDS -->
+<div id="recordsPage" class="container" style="display:none;">
+  <h3>Clinic Records</h3>
+  <div class="summary-box">
+    <h4>Monthly Sickness Percentage</h4>
+    <select id="summaryMonth"></select>
+    <div id="summaryContent"></div>
+  </div>
+  <button class="btn primary" id="downloadPdf">Download PDF</button>
+  <input id="searchInput" class="search-box" placeholder="Search name, guardian, grade, phone...">
+  <div id="recordsContainer"></div>
+</div>
+
+<footer>© 2025 School Clinic</footer>
+</div>
+
+<script>
+/* LOGIN */
+function doLogin(){
+  if(username.value==="admin 1" && password.value==="clinic"){
+    loginPage.style.display="none";
+    mainPage.style.display="block";
+  } else alert("Invalid login");
+}
+loginBtn.onclick=doLogin;
+username.onkeydown=e=>{if(e.key==="Enter") doLogin();};
+password.onkeydown=e=>{if(e.key==="Enter") doLogin();};
+logoutBtn.onclick=()=>{
+  localStorage.clear();
+  location.reload();
+};
+
+/* TABS */
+const pages={home:homePage,notifier:notifierPage,records:recordsPage};
+tabHome.onclick=()=>show("home");
+tabNotifier.onclick=()=>show("notifier");
+tabRecords.onclick=()=>show("records");
+
+function show(p){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab"+p.charAt(0).toUpperCase()+p.slice(1)).classList.add("active");
+  Object.values(pages).forEach(x=>x.style.display="none");
+  pages[p].style.display="block";
+  p==="notifier"?startScanner():stopScanner();
+  if(p==="records") loadRecords();
+}
+
+/* QR SCANNER */
+let qr, scanning=false;
+function startScanner(){
+  if(scanning) return;
+  qr=new Html5Qrcode("reader");
+  qr.start({facingMode:"environment"},{fps:10,qrbox:250},text=>{
+    parseQR(text);
+    stopScanner();
+  }).then(()=>scanning=true);
+}
+function stopScanner(){
+  if(qr&&scanning) qr.stop().then(()=>{qr.clear();scanning=false});
+}
+
+/* QR PARSER */
+function parseQR(data){
+  rawData.value=data;
+  data.split("||").map(p=>p.trim()).forEach(p=>{
+    if(p.startsWith("Name:")) studentName.value=p.replace("Name:","").trim();
+    if(p.startsWith("Grade & Section:")) gradeSection.value=p.replace("Grade & Section:","").trim();
+    if(p.startsWith("Parent or Guardian:")) guardianName.value=p.replace("Parent or Guardian:","").trim();
+    if(p.startsWith("Contact no.:")) parentPhone.value=p.replace("Contact no.:","").trim();
+  });
+  genSMS();
+}
+
+/* PHONE */
+parentPhone.oninput=()=>parentPhone.value=parentPhone.value.replace(/\D/g,"");
+
+/* REASON LOGIC */
+reasonSelect.onchange=()=>{
+  reasonOther.style.display = reasonSelect.value==="Other" ? "block" : "none";
+  genSMS();
+};
+reasonOther.oninput=genSMS;
+
+/* SMS */
+[studentName,gradeSection,guardianName].forEach(i=>i.oninput=genSMS);
+function getReason(){
+  return reasonSelect.value==="Other" ? reasonOther.value : reasonSelect.value;
+}
+function genSMS(){
+  if(!studentName.value||!gradeSection.value) return;
+  smsMessage.value=
+`Good day ${guardianName.value || ""}!
+
+This is to inform you that your child, ${studentName.value} (${gradeSection.value}), visited the school clinic today.
+
+Reason: ${getReason() || "Clinic Visit"}
+
+Thank you.
+- School Clinic`;
+}
+
+/* SAVE */
+saveRecord.onclick=()=>{
+  let r=JSON.parse(localStorage.getItem("records")||"[]");
+  r.push({
+    name:studentName.value,
+    grade:gradeSection.value,
+    guardian:guardianName.value,
+    reason:getReason(),
+    phone:parentPhone.value,
+    date:new Date().toLocaleString(),
+    timeout:""
+  });
+  localStorage.setItem("records",JSON.stringify(r));
+  alert("Record saved");
+  studentName.value="";
+  gradeSection.value="";
+  guardianName.value="";
+  reasonSelect.value="";
+  reasonOther.value="";
+  reasonOther.style.display="none";
+  parentPhone.value="";
+  rawData.value="";
+  smsMessage.value="";
+  show("records");
+};
+
+copySms.onclick=()=>{
+  if(!smsMessage.value){
+    alert("No message to copy");
+    return;
+  }
+  let text=smsMessage.value;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      alert("Message copied");
+    }).catch(()=>{
+      let t=document.createElement("textarea");
+      t.value=text;
+      document.body.appendChild(t);
+      t.select();
+      try{
+        document.execCommand("copy");
+        alert("Message copied");
+      }catch(e){
+        alert("Unable to copy message");
+      }
+      document.body.removeChild(t);
+    });
+  }else{
+    let t=document.createElement("textarea");
+    t.value=text;
+    document.body.appendChild(t);
+    t.select();
+    try{
+      document.execCommand("copy");
+      alert("Message copied");
+    }catch(e){
+      alert("Unable to copy message");
+    }
+    document.body.removeChild(t);
+  }
+};
+
+/* LOAD + SEARCH */
+function loadRecords(){
+  let raw=JSON.parse(localStorage.getItem("records")||"[]");
+  let r=raw.map((x,i)=>{x._idx=i;return x});
+  displayRecords(r);
+  setupSummary(r);
+  searchInput.oninput=()=>{
+    let q=searchInput.value.toLowerCase();
+    displayRecords(r.filter(x=>
+      x.name.toLowerCase().includes(q) ||
+      x.guardian.toLowerCase().includes(q) ||
+      x.grade.toLowerCase().includes(q) ||
+      x.phone.includes(q)
+    ));
+  };
+}
+function displayRecords(list){
+  if(!list.length){
+    recordsContainer.innerHTML="No records found";
+    return;
+  }
+  let groups={};
+  list.forEach(x=>{
+    let g=x.grade||"Unknown";
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(x);
+  });
+  let grades=Object.keys(groups).sort();
+  recordsContainer.innerHTML="";
+  grades.forEach(g=>{
+    recordsContainer.innerHTML+=`<h4>${g}</h4>`;
+    groups[g].forEach(x=>{
+      recordsContainer.innerHTML+=`
+      <div class="record-card">
+        <b>${x.name}</b><br>
+        ${x.grade}<br>
+        Guardian: ${x.guardian}<br>
+        Reason: ${x.reason}<br>
+        ${x.phone}<br>
+        <small>In: ${x.date}${x.timeout ? " | Out: "+x.timeout : ""}</small><br>
+        <button class="btn primary" data-timeout="${x._idx}">Time Out</button>
+        <button class="btn primary delete-btn" data-idx="${x._idx}">Delete</button>
+      </div>`;
+    });
+  });
+  document.querySelectorAll("[data-timeout]").forEach(b=>{
+    b.onclick=()=>{
+      let idx=parseInt(b.getAttribute("data-timeout"));
+      if(isNaN(idx)) return;
+      timeoutRecord(idx);
+    };
+  });
+  document.querySelectorAll(".delete-btn").forEach(b=>{
+    b.onclick=()=>{
+      let idx=parseInt(b.getAttribute("data-idx"));
+      if(isNaN(idx)) return;
+      deleteRecord(idx);
+    };
+  });
+}
+function deleteRecord(idx){
+  let r=JSON.parse(localStorage.getItem("records")||"[]");
+  if(idx<0||idx>=r.length) return;
+  if(!confirm("Delete this record?")) return;
+  r.splice(idx,1);
+  localStorage.setItem("records",JSON.stringify(r));
+  loadRecords();
+}
+function timeoutRecord(idx){
+  let r=JSON.parse(localStorage.getItem("records")||"[]");
+  if(idx<0||idx>=r.length) return;
+  let now=new Date().toLocaleTimeString();
+  r[idx].timeout=now;
+  localStorage.setItem("records",JSON.stringify(r));
+  loadRecords();
+}
+function getMonthKey(d){
+  let date=new Date(d);
+  if(isNaN(date)) return null;
+  let m=date.getMonth()+1;
+  let y=date.getFullYear();
+  return y+"-"+(m<10?"0"+m:m);
+}
+function formatMonthLabel(key){
+  let parts=key.split("-");
+  let y=parseInt(parts[0]);
+  let m=parseInt(parts[1])-1;
+  let date=new Date(y,m,1);
+  return date.toLocaleString(undefined,{month:"long",year:"numeric"});
+}
+function setupSummary(records){
+  if(!summaryMonth) return;
+  let map={};
+  records.forEach(x=>{
+    let key=getMonthKey(x.date);
+    if(!key) return;
+    map[key]=true;
+  });
+  summaryMonth.innerHTML="";
+  let keys=Object.keys(map).sort();
+  if(!keys.length){
+    summaryContent.innerHTML="No data available";
+    return;
+  }
+  keys.forEach(key=>{
+    let opt=document.createElement("option");
+    opt.value=key;
+    opt.textContent=formatMonthLabel(key);
+    summaryMonth.appendChild(opt);
+  });
+  summaryMonth.onchange=()=>updateSummary(records);
+  updateSummary(records);
+}
+function updateSummary(records){
+  if(!summaryMonth.value){
+    summaryContent.innerHTML="No data available";
+    return;
+  }
+  let parts=summaryMonth.value.split("-");
+  let year=parseInt(parts[0]);
+  let month=parseInt(parts[1]);
+  let list=records.filter(x=>{
+    let d=new Date(x.date);
+    if(isNaN(d)) return false;
+    return d.getFullYear()===year && d.getMonth()+1===month;
+  });
+  if(!list.length){
+    summaryContent.innerHTML="No records for selected month";
+    return;
+  }
+  let total=list.length;
+  let counts={};
+  list.forEach(x=>{
+    let reason=x.reason||"Clinic Visit";
+    counts[reason]=(counts[reason]||0)+1;
+  });
+  let html='<table class="summary-table"><tr><th>Reason</th><th>Count</th><th>Percentage</th></tr>';
+  Object.keys(counts).forEach(reason=>{
+    let count=counts[reason];
+    let pct=((count/total)*100).toFixed(1);
+    html+=`<tr><td>${reason}</td><td>${count}</td><td>${pct}%</td></tr>`;
+  });
+  html+="</table>";
+  summaryContent.innerHTML=html;
+}
+downloadPdf.onclick=()=>{
+  let r=JSON.parse(localStorage.getItem("records")||"[]");
+  if(!r.length){
+    alert("No records to export");
+    return;
+  }
+  if(!window.jspdf||!window.jspdf.jsPDF){
+    alert("PDF library not loaded");
+    return;
+  }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  let y=10;
+  doc.setFontSize(14);
+  doc.text("Clinic Records",10,y);
+  y+=8;
+  doc.setFontSize(10);
+  r.forEach((x,i)=>{
+    let line=`${i+1}. ${x.date} - ${x.name} (${x.grade})`;
+    let line2=`Guardian: ${x.guardian} | Reason: ${x.reason} | Phone: ${x.phone}`;
+    let lines=doc.splitTextToSize(line,180);
+    let lines2=doc.splitTextToSize(line2,180);
+    doc.text(lines,10,y);
+    y+=lines.length*5;
+    doc.text(lines2,10,y);
+    y+=lines2.length*5+3;
+    if(y>280&&i<r.length-1){
+      doc.addPage();
+      y=10;
+    }
+  });
+  doc.save("clinic_records.pdf");
+};
+</script>
+
+</body>
+</html>
